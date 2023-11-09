@@ -21,6 +21,8 @@ class User
 
     public static function register()
     {
+        //Checks wether submit post is equal to register
+        //Still checks if post are empty becuase even if the html form has required tag it can still bypass by editing using inspect element so it really is a good practice to add a validation in the server side
         if ($_POST['submit'] != 'register' 
         || empty($_POST['password']) 
         || empty($_POST['username']) 
@@ -44,7 +46,7 @@ class User
             return false;
         }
 
-        if(!preg_match('/^[0-9A-Z!@#$%^&*()-_+=,.<>?/|{}[]:;~`\\ ]+$/', strtoupper($_POST['password'])))
+        if(!preg_match('/^[[:alnum:][:punct:]]+$/', strtoupper($_POST['password'])))
         {
             error_msg('Password should have atleast 1 numerical and 1 special character.');
             return false;
