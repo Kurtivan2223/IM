@@ -13,9 +13,10 @@ db_auth_dbname
     Auth Database DBName
 =====================================================================*/
 $config['db_auth_host'] = '127.0.0.1';
-$config['db_auth_port'] = '3306';
+$config['db_auth_port'] = '3306'; 
 $config['db_auth_user'] = 'root';
 $config['db_auth_pass'] = '';
+$config['db_auth_dbname'] = 'System';
 /*===================================================================
 SMTP config.
 We need this part to send an email. (used for restore password and 2FA)

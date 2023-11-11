@@ -10,13 +10,45 @@ class User
         {
             self::register();
             self::login();
-            self::logout();
         }
     }
 
     public static function login()
     {
-        //Todo..
+        if($_POST['submit'] != 'login'
+        || empty($_POST['useroremail'])
+        || empty($_POST['password']))
+        {
+            return false;
+        }
+
+        if(str_contains($_POST['useroremail'], '@'))
+        {
+            $query = self::$handle->prepare("SELECT ID, Username, Email FROM Account WHERE Email = :email AND Password = :password");
+        }
+        else
+        {
+            $query = self::$handle->prepare("SELECT ID, Username, Email FROM Account WHERE Username = :user AND Password = :password");
+        }
+
+        $query->execute(array($_POST['useroremail'], $_POST['password']));
+
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        if(empty($result[0]))
+        {
+            error_msg('Username/Email or Password is Incorrect. Try again.');
+            return false;
+        }
+
+        $result['ID'] = $_SESSION['ID'];
+        $result['Username'] = $_SESSION['Username'];
+        $result['Email'] = $_SESSION['Email'];
+
+        success_msg('Successfully Logged in.');
+
+        header("Location: home.php");
+        exit();
     }
 
     public static function register()
@@ -30,7 +62,6 @@ class User
         || empty($_POST['email'])
         || empty($_POST['fname'])
         || empty($_POST['lname'])
-        || empty($_POST['bday'])
         || empty($_POST['gender']))
         {
             return false;
@@ -79,7 +110,7 @@ class User
 
         //if all requirement are met
         $query = self::$handle->prepare(
-            "INSERT INTO account VALUES(:username, :email, :password, :fname, :lname, :bday, :gender, :regdate, :ip)"
+            "INSERT INTO account VALUES(:username, :email, :password, :fname, :lname, :gender, CURDATE())"
         );
 
         $query->execute(array(
@@ -88,25 +119,17 @@ class User
             ':password' => $_POST['password'],
             ':fname' => $_POST['fname'],
             ':lname' => $_POST['lname'],
-            ':bday' => $_POST['bday'],
-            ':gender' => $_POST['gender'],
-            ':regdate' => date('Y-m-d'),
-            ':ip' => getip()
+            ':gender' => $_POST['gender']
         ));
 
         success_msg('Your account has been created.');
 
-        header("Location: home.php");
+        header("Location: login.php");
         exit();
     }
 
     public static function logout()
     {
-        if($_POST['submit'] != 'logout')
-        {
-            return false;
-        }
-
         //destroy session
         session_destroy();
 
