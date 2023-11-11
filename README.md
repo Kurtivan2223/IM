@@ -19,3 +19,8 @@ The Flight Ticket Reservation System is a web-based application designed to simp
 •	Notify User for booking confirmation, flight update or reminder.
 
 •	Customer Support through support ticket system for user inquiries and issues.
+
+
+# ToDo:
+  •	Cursor to Airplane Gif
+  •	Hover To Twin Tower goes BOOM.
