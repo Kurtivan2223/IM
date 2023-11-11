@@ -23,5 +23,7 @@ The Flight Ticket Reservation System is a web-based application designed to simp
 
 # ToDo:
   •	Cursor to Airplane Gif
+
+  •	Background set to Twin Towers
   
   •	Hover To Twin Tower goes BOOM.
