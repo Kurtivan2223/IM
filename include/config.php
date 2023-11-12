@@ -1,5 +1,11 @@
 <?php
 /*===================================================================
+Debug Control for website
+debug_mode
+    Boolean True or False
+=====================================================================*/
+$config['debug_mode'] = false;
+/*===================================================================
 You Auth MySQL information.
 db_auth_host
     Auth Database Host
@@ -21,6 +27,8 @@ $config['db_auth_dbname'] = 'System';
 SMTP config.
 We need this part to send an email. (used for restore password and 2FA)
 You can use your own SMTP or Gmail/Yahoo/Hotmail and etc
+enable_mail
+    Enables the Usage of Send mail
 smtp_host
     Specify main and backup SMTP servers
 smtp_port
@@ -36,6 +44,7 @@ smtp_secure
 smtp_mail
     Send emails by ...
 =====================================================================*/
+$config['enable_mail'] = false;
 $config['smtp_host'] = 'smtp1.example.com';
 $config['smtp_port'] = 587;
 $config['smtp_auth'] = true;
