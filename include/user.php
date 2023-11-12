@@ -2,9 +2,14 @@
 
 class User
 {
-    private static $handle = new Database();
+    private $handle;
 
-    public static function post_handler()
+    public function __construct()
+    {
+        $this->handle = new Database();
+    }
+
+    public function post_handler()
     {
         if(!empty($_POST['submit']))
         {
@@ -13,7 +18,7 @@ class User
         }
     }
 
-    public static function login()
+    public function login()
     {
         if($_POST['submit'] != 'login'
         || empty($_POST['useroremail'])
@@ -24,11 +29,11 @@ class User
 
         if(str_contains($_POST['useroremail'], '@'))
         {
-            $query = self::$handle->prepare("SELECT ID, Username, Email FROM Account WHERE Email = :email AND Password = :password");
+            $query = $this->handle->prepare("SELECT ID, Username, Email FROM Account WHERE Email = :email AND Password = :password");
         }
         else
         {
-            $query = self::$handle->prepare("SELECT ID, Username, Email FROM Account WHERE Username = :user AND Password = :password");
+            $query = $this->handle->prepare("SELECT ID, Username, Email FROM Account WHERE Username = :user AND Password = :password");
         }
 
         $query->execute(array($_POST['useroremail'], $_POST['password']));
@@ -51,7 +56,7 @@ class User
         exit();
     }
 
-    public static function register()
+    public function register()
     {
         //Checks wether submit post is equal to register
         //Still checks if post are empty becuase even if the html form has required tag it can still bypass by editing using inspect element so it really is a good practice to add a validation in the server side
@@ -109,7 +114,7 @@ class User
         }
 
         //if all requirement are met
-        $query = self::$handle->prepare(
+        $query = $this->handle->prepare(
             "INSERT INTO account VALUES(:username, :email, :password, :fname, :lname, :gender, CURDATE())"
         );
 
@@ -128,7 +133,7 @@ class User
         exit();
     }
 
-    public static function logout()
+    public function logout()
     {
         //destroy session
         session_destroy();
@@ -139,10 +144,10 @@ class User
 
     }
 
-    public static function check_email_exists($email)
+    public function check_email_exists($email)
     {
         if (!empty($email)) {
-            $query = self::$handle->prepare("SELECT email FROM account WHERE email = :email");
+            $query = $this->handle->prepare("SELECT email FROM account WHERE email = :email");
             $query->bindParam(':email', $email, PDO::PARAM_STR);
             $query->execute();
             $datas = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -154,10 +159,10 @@ class User
         return false;
     }
 
-    public static function check_username_exists($username)
+    public function check_username_exists($username)
     {
         if (!empty($username)) {
-            $query = self::$handle->prepare("SELECT username FROM account WHERE username = :username");
+            $query = $this->handle->prepare("SELECT username FROM account WHERE username = :username");
             $query->bindParam(':username', $username, PDO::PARAM_STR);
             $query->execute();
             $datas = $query->fetchAll(PDO::FETCH_ASSOC);
