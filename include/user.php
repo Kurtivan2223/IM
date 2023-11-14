@@ -13,15 +13,16 @@ class User
     {
         if(!empty($_POST['submit']))
         {
-            self::register();
-            self::login();
+            if($_POST['submit'] == 'login')
+                self::login();
+            if($_POST['submit'] == 'register')
+                self::register();
         }
     }
 
-    public function login()
+    public static function login()
     {
-        if($_POST['submit'] != 'login'
-        || empty($_POST['useroremail'])
+        if(empty($_POST['useroremail'])
         || empty($_POST['password']))
         {
             return false;
@@ -29,6 +30,11 @@ class User
 
         if(str_contains($_POST['useroremail'], '@'))
         {
+            if (!filter_var($_POST['useroremail'], FILTER_VALIDATE_EMAIL)) {
+                error_msg('Invalid email.');
+                return false;
+            }
+
             $query = $this->handle->prepare("SELECT ID, Username, Email FROM Account WHERE Email = :email AND Password = :password");
         }
         else
@@ -56,19 +62,19 @@ class User
         exit();
     }
 
-    public function register()
+    public static function register()
     {
         //Checks wether submit post is equal to register
         //Still checks if post are empty becuase even if the html form has required tag it can still bypass by editing using inspect element so it really is a good practice to add a validation in the server side
-        if ($_POST['submit'] != 'register' 
+        if (empty($_POST['username'])
         || empty($_POST['password']) 
-        || empty($_POST['username']) 
         || empty($_POST['repassword']) 
         || empty($_POST['email'])
         || empty($_POST['fname'])
         || empty($_POST['lname'])
         || empty($_POST['gender']))
         {
+            error_msg('Missing Input.');
             return false;
         }
 
@@ -82,7 +88,7 @@ class User
             return false;
         }
 
-        if(!preg_match('/^[[:alnum:][:punct:]]+$/', strtoupper($_POST['password'])))
+        if(!preg_match('/^[[:alnum:][:punct:]]+$/', $_POST['password']))
         {
             error_msg('Password should have atleast 1 numerical and 1 special character.');
             return false;
@@ -128,9 +134,6 @@ class User
         ));
 
         success_msg('Your account has been created.');
-
-        header("Location: login.php");
-        exit();
     }
 
     public function logout()
@@ -150,9 +153,9 @@ class User
             $query = $this->handle->prepare("SELECT email FROM account WHERE email = :email");
             $query->bindParam(':email', $email, PDO::PARAM_STR);
             $query->execute();
-            $datas = $query->fetchAll(PDO::FETCH_ASSOC);
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
 
-            if (empty($datas[0])) {
+            if (empty($data[0])) {
                 return true;
             }
         }
@@ -162,15 +165,47 @@ class User
     public function check_username_exists($username)
     {
         if (!empty($username)) {
-            $query = $this->handle->prepare("SELECT username FROM account WHERE username = :username");
+            $query = $this->handle->prepare("SELECT Username FROM `Account` WHERE Username = :username");
             $query->bindParam(':username', $username, PDO::PARAM_STR);
             $query->execute();
-            $datas = $query->fetchAll(PDO::FETCH_ASSOC);
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
 
-            if (empty($datas[0])) {
+            if (empty($data[0])) {
                 return true;
             }
         }
+
         return false;
+    }
+
+    public function sendSupportInquiry($userid, $username, $message)
+    {
+        if(empty($userid))
+        {
+            $query = $this->handle->prepare("SELECT ID FROM `Account` WHERE username = :username");
+            $query->bindParam(':username', $username, PDO::PARAM_STR);
+            $query->execute();
+            $userid = $query->fetch(PDO::FETCH_ASSOC);
+        }
+
+        $supportID = generateSupportToken();
+
+        $query = $this->handle->prepare("SELECT TicketNo FROM `supportticket` WHERE TicketNo = :id");
+        $query->bindParam(':id', $supportID, PDO::PARAM_STR);
+        $query->execute();
+        $data = $query->fetch(PDO::FETCH_ASSOC);
+
+        if(empty($data))
+        {
+            $query = $this->handle->prepare("INSERT INTO `supportticket` VALUES(:id, :uid, :username, :message, CURDATE(), No)");
+            $query->execute(array(
+                ":id" => $supportID,
+                ":uid" => $userid,
+                ":username" => $username,
+                ":message" => $message
+            ));
+
+            success_msg('Inquiry Sent.');
+        }
     }
 }

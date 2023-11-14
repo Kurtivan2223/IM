@@ -76,11 +76,13 @@ CREATE TABLE `flight`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `supportticket`;
 CREATE TABLE `supportticket`  (
-  `TicketNo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `TicketNo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `UserId` int NULL DEFAULT NULL,
   `Username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `Message` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `InquirySubmitted` datetime NULL DEFAULT NULL,
   `ResolvedIssue` enum('Yes','No') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `ResolvedIssueDate` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`TicketNo`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
