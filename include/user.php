@@ -2,27 +2,20 @@
 
 class User
 {
-    private $handle;
-
-    public function __construct()
-    {
-        $this->handle = new Database();
-    }
-
-    public function post_handler()
+    public static function post_handler()
     {
         if(!empty($_POST['submit']))
         {
-            if($_POST['submit'] == 'login')
-                self::login();
-            if($_POST['submit'] == 'register')
-                self::register();
+            self::login();
+            self::register();
+            self::bookflight();
         }
     }
 
     public static function login()
     {
-        if(empty($_POST['useroremail'])
+        if($_POST['submit'] != 'login'
+        || empty($_POST['useroremail'])
         || empty($_POST['password']))
         {
             return false;
@@ -35,11 +28,11 @@ class User
                 return false;
             }
 
-            $query = $this->handle->prepare("SELECT ID, Username, Email FROM Account WHERE Email = :email AND Password = :password");
+            $query = Database::$connection->prepare("SELECT ID, Username, Email FROM Account WHERE Email = :email AND Password = :password");
         }
         else
         {
-            $query = $this->handle->prepare("SELECT ID, Username, Email FROM Account WHERE Username = :user AND Password = :password");
+            $query = Database::$connection->prepare("SELECT ID, Username, Email FROM Account WHERE Username = :user AND Password = :password");
         }
 
         $query->execute(array($_POST['useroremail'], $_POST['password']));
@@ -66,7 +59,8 @@ class User
     {
         //Checks wether submit post is equal to register
         //Still checks if post are empty becuase even if the html form has required tag it can still bypass by editing using inspect element so it really is a good practice to add a validation in the server side
-        if (empty($_POST['username'])
+        if ($_POST['submit'] != 'register'
+        || empty($_POST['username'])
         || empty($_POST['password']) 
         || empty($_POST['repassword']) 
         || empty($_POST['email'])
@@ -74,7 +68,6 @@ class User
         || empty($_POST['lname'])
         || empty($_POST['gender']))
         {
-            error_msg('Missing Input.');
             return false;
         }
 
@@ -88,9 +81,9 @@ class User
             return false;
         }
 
-        if(!preg_match('/^[[:alnum:][:punct:]]+$/', $_POST['password']))
+        if(!preg_match('/^[a-zA-Z0-9]+$/', $_POST['password']))
         {
-            error_msg('Password should have atleast 1 numerical and 1 special character.');
+            error_msg('Password should have atleast 1 Lower/Upper Case and 1 Numerical.');
             return false;
         }
 
@@ -100,12 +93,12 @@ class User
         }
 
         if (!(strlen($_POST['password']) >= 4 && strlen($_POST['password']) <= 16)) {
-            error_msg('Password length is not valid.');
+            error_msg('Password length Should be greater than 4 and less than 16.');
             return false;
         }
 
         if (!(strlen($_POST['username']) >= 2 && strlen($_POST['username']) <= 16)) {
-            error_msg('Username length is not valid.');
+            error_msg('Username length Should be greater than 2 and less than 16.');
             return false;
         }
 
@@ -120,8 +113,8 @@ class User
         }
 
         //if all requirement are met
-        $query = $this->handle->prepare(
-            "INSERT INTO account VALUES(:username, :email, :password, :fname, :lname, :gender, CURDATE())"
+        $query = Database::$connection->prepare(
+            "INSERT INTO `Account`(Username, Email, Password, Fname, Lname, Gender, RegisterDate) VALUES(:username, :email, :password, :fname, :lname, :gender, CURDATE())"
         );
 
         $query->execute(array(
@@ -147,10 +140,53 @@ class User
 
     }
 
-    public function check_email_exists($email)
+    public static function bookflight()
+    {
+        if($_POST['submit'] != 'book')
+        {
+            return false;
+        }
+
+        if(empty($_POST['cabinclass']))
+        {
+            error_msg('Please Select Cabin Class');
+            return false;
+        }
+
+        $bookid = bin2hex(random_bytes(15));
+        $ticketNum = bin2hex(random_bytes(10));
+
+        $query = Database::$connection->prepare("INSERT INTO `Booking` VALUES(:id, :uid, :fid, CURDATE(), :seatnum, :class, :ticketnum, :TicketFare)");
+        $query->execute(array(
+            ":id"=> $bookid,
+            ":uid"=> $_SESSION['ID'],
+            ":fid" => $_POST['fid'],
+            //":seatnum" => //Todo..,
+            ":ticketnum" => $ticketNum,
+            "ticketFare" => $_POST['fare']
+        ));
+
+        success_msg('Successfully Book the Flight.s');
+    }
+
+    public static function cancelBook()
+    {
+        if(empty($_GET['bookid']))
+        {
+            return false;
+        }
+
+        $query = Database::$connection->prepare("DELETE FROM `Booking` WHERE BookID = :id");
+        $query->bindParam(":id", $_GET['bookid'], PDO::PARAM_STR);
+        $query->execute();
+
+        success_msg('Book Cancelled!');
+    }
+
+    public static function check_email_exists($email)
     {
         if (!empty($email)) {
-            $query = $this->handle->prepare("SELECT email FROM account WHERE email = :email");
+            $query = Database::$connection->prepare("SELECT email FROM account WHERE email = :email");
             $query->bindParam(':email', $email, PDO::PARAM_STR);
             $query->execute();
             $data = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -162,10 +198,10 @@ class User
         return false;
     }
 
-    public function check_username_exists($username)
+    public static function check_username_exists($username)
     {
         if (!empty($username)) {
-            $query = $this->handle->prepare("SELECT Username FROM `Account` WHERE Username = :username");
+            $query = Database::$connection->prepare("SELECT Username FROM `Account` WHERE Username = :username");
             $query->bindParam(':username', $username, PDO::PARAM_STR);
             $query->execute();
             $data = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -178,34 +214,33 @@ class User
         return false;
     }
 
-    public function sendSupportInquiry($userid, $username, $message)
+    public static function sendSupportInquiry($userid, $username, $message)
     {
         if(empty($userid))
         {
-            $query = $this->handle->prepare("SELECT ID FROM `Account` WHERE username = :username");
+            $query = Database::$connection->prepare("SELECT ID FROM `Account` WHERE username = :username");
             $query->bindParam(':username', $username, PDO::PARAM_STR);
             $query->execute();
             $userid = $query->fetch(PDO::FETCH_ASSOC);
         }
 
-        $supportID = generateSupportToken();
-
-        $query = $this->handle->prepare("SELECT TicketNo FROM `supportticket` WHERE TicketNo = :id");
-        $query->bindParam(':id', $supportID, PDO::PARAM_STR);
-        $query->execute();
-        $data = $query->fetch(PDO::FETCH_ASSOC);
-
-        if(empty($data))
+        do
         {
-            $query = $this->handle->prepare("INSERT INTO `supportticket` VALUES(:id, :uid, :username, :message, CURDATE(), No)");
-            $query->execute(array(
-                ":id" => $supportID,
-                ":uid" => $userid,
-                ":username" => $username,
-                ":message" => $message
-            ));
+            $supportID = bin2hex(random_bytes(20));
+            $query = Database::$connection->prepare("SELECT TicketNo FROM `supportticket` WHERE TicketNo = :id");
+            $query->bindParam(':id', $supportID, PDO::PARAM_STR);
+            $query->execute();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+        }while(!empty($data));
+        
+        $query = Database::$connection->prepare("INSERT INTO `supportticket` VALUES(:id, :uid, :username, :message, CURDATE(), No)");
+        $query->execute(array(
+            ":id" => $supportID,
+            ":uid" => $userid,
+            ":username" => $username,
+            ":message" => $message
+        ));
 
-            success_msg('Inquiry Sent.');
-        }
+        success_msg('Inquiry Sent.');
     }
 }

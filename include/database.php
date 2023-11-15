@@ -1,11 +1,12 @@
 <?php
-
-class Database extends PDO
+class Database
 {
-    public function __construct()
+    public static $connection;
+
+    public static function db_connection()
     {
-        parent::__construct("mysql:host=".get_config('db_auth_host').";dbname=".get_config('db_auth_dbname')."", get_config('db_auth_user'), get_config('db_auth_pass'));
-        $this->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        self::$connection = new PDO("mysql:host=".get_config('db_auth_host').";dbname=".get_config('db_auth_dbname')."", get_config('db_auth_user'), get_config('db_auth_pass'));
+        self::$connection->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        self::$connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     }
 }

@@ -1,21 +1,22 @@
 <?php
+    include_once "loader.php";
 
-    include_once "./include/config.php";
-    include_once "./include/functions.php";
-    include_once "./include/Database.php";
-    include_once "./include/admin.php";
-    include_once "./include/user.php";
+    $data = Admin::getUsers();
 
-    $admin = new Admin();
-    $user = new User();
-
-    echo (!$user->check_username_exists("kurtivan23")) ? "true" : "false";
-
-    echo "<br/>";
-
-    $data = $admin->getUsers();
-
-    foreach($data as $row)
+    if(!empty($data))
     {
-        echo "ID: " . $row['ID'] . " Username: " . $row['Username'] . "<br />";
+        foreach($data as $row)
+        {
+            switch($row['Gender'])
+            {
+                case 'M':
+                    $gender = "Male";
+                    break;
+                case 'F':
+                    $gender = "Female";
+                    break;
+            }
+
+            echo "ID: " . $row['ID'] . " | Username: " . $row['Username'] . " | Full Name: " . $row['Fname'] ." ". $row['Lname'] . " | Gender: " . $gender . "<br />";
+        }
     }
