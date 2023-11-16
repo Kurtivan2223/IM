@@ -38,14 +38,14 @@ CREATE TABLE `account`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `booking`;
 CREATE TABLE `booking`  (
-  `BookID` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `BookID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `AccID` int NOT NULL,
-  `FlightID` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `FlightID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `BookDate` datetime NOT NULL,
   `PassengerSeatNumber` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `CabinClass` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `TicketNumber` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `TicketFare` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `TicketNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  --`TicketFare` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  'TicketFare' decimal(10, 2) NOT NULL,
   PRIMARY KEY (`BookID`) USING BTREE,
   INDEX `AccountID_FKey`(`AccID` ASC) USING BTREE,
   INDEX `FlightID_FKey`(`FlightID` ASC) USING BTREE,

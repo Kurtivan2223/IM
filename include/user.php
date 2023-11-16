@@ -140,6 +140,22 @@ class User
 
     }
 
+    public static function searchFlight()
+    {
+        $query = Database::$connection->prepare("SELECT * FROM `Flight` WHERE Origin = :origin AND Distination = :distination");
+        $query->execute(array(
+            ":origin" => $_POST['origin'],
+            ":distination" => $_POST['distination']
+        ));
+        $data = $query->fetch(PDO::FETCH_ASSOC);
+
+        if(!empty($data)) {
+            return $data;
+        }
+
+        return false;
+    }
+
     public static function bookflight()
     {
         if($_POST['submit'] != 'book')
@@ -153,8 +169,24 @@ class User
             return false;
         }
 
-        $bookid = bin2hex(random_bytes(15));
-        $ticketNum = bin2hex(random_bytes(10));
+        do
+        {
+            $bookid = bin2hex(random_bytes(15));
+            $query = Database::$connection->prepare("SELECT BookID FROM `Booking` WHERE BookID = :id");
+            $query->bindParam(':id', $bookid, PDO::PARAM_STR);
+            $query->execute();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+        }while(!empty($data));
+
+        do
+        {
+            $ticketNum = bin2hex(random_bytes(10));
+            $query = Database::$connection->prepare("SELECT TicketNumber FROM `Booking` WHERE TicketNumber = :id");
+            $query->bindParam(':id', $ticketNum, PDO::PARAM_STR);
+            $query->execute();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+
+        }while(!empty($data));
 
         $query = Database::$connection->prepare("INSERT INTO `Booking` VALUES(:id, :uid, :fid, CURDATE(), :seatnum, :class, :ticketnum, :TicketFare)");
         $query->execute(array(
@@ -165,6 +197,10 @@ class User
             ":ticketnum" => $ticketNum,
             "ticketFare" => $_POST['fare']
         ));
+
+        $query = Database::$connection->prepare("UPDATE `Flight` SET PassengerCount += 1 WHERE ID = :id");
+        $query->bindParam(":id", $_POST['fid'], PDO::PARAM_STR);
+        $query->execute();
 
         success_msg('Successfully Book the Flight.s');
     }
@@ -242,5 +278,39 @@ class User
         ));
 
         success_msg('Inquiry Sent.');
+    }
+
+    public static function getSeat($fid)
+    {
+        $array = array();
+        $data = array();
+        $letters = range("A", "H");
+        $numbers = range(1, 30);
+
+        foreach($letters as $letter)
+        {
+            foreach($numbers as $number)
+            {
+                $array[] = $letter.$number;
+            }
+        }
+
+        foreach($array as $seat)
+        {
+            $query = Database::$connection->prepare("SELECT COUNT(*) FROM `booking` WHERE FlightID = :id AND PassengerSeatNumber = :seat");
+            $query->execute(array(
+                ":fid"=> $fid,
+                ":seat"=> $seat
+            ));
+
+            $count = $query->fetchColumn();
+
+            if($count < 1)
+            {
+                $data[] = $seat;
+            }
+        }
+
+        return $data;
     }
 }
