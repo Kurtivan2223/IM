@@ -39,7 +39,7 @@ class User
 
         $result = $query->fetch(PDO::FETCH_ASSOC);
 
-        if(empty($result[0]))
+        if(empty($result["ID"]))
         {
             error_msg('Username/Email or Password is Incorrect. Try again.');
             return false;
@@ -51,7 +51,7 @@ class User
 
         success_msg('Successfully Logged in.');
 
-        header("Location: home.php");
+        header('Location: http://localhost/user/index.php');
         exit();
     }
 
@@ -127,6 +127,8 @@ class User
         ));
 
         success_msg('Your account has been created.');
+
+        header("Location: login.php");
     }
 
     public function logout()
@@ -163,12 +165,6 @@ class User
             return false;
         }
 
-        if(empty($_POST['cabinclass']))
-        {
-            error_msg('Please Select Cabin Class');
-            return false;
-        }
-
         do
         {
             $bookid = bin2hex(random_bytes(15));
@@ -188,7 +184,7 @@ class User
 
         }while(!empty($data));
 
-        $query = Database::$connection->prepare("INSERT INTO `Booking` VALUES(:id, :uid, :fid, CURDATE(), :seatnum, :class, :ticketnum, :TicketFare)");
+        $query = Database::$connection->prepare("INSERT INTO `Booking` VALUES(:id, :uid, :fid, CURDATE(), :seatnum, :ticketnum, :TicketFare)");
         $query->execute(array(
             ":id"=> $bookid,
             ":uid"=> $_SESSION['ID'],
